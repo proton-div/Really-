@@ -99,3 +99,14 @@ int main() {
     WSACleanup();
     return 0;
 }
+
+
+
+
+
+g++ in_yerr.cpp -o in_yerr.exe -lws2_32
+
+./in_yerr.exe
+http://localhost:8080
+
+
