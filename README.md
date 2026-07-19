@@ -19,11 +19,12 @@ string read_html_design() {
     return content;
 }
 
-// دالة لاستبدال النصوص داخل التصميم
-void replace_placeholder(string& str, const string& from, const string& to) {
-    size_t start_pos = str.find(from);
-    if (start_pos != string::npos) {
+// الدالة القوية والشاملة لاستبدال النصوص في كل مكان بالملف
+void replace_all(string& str, const string& from, const string& to) {
+    size_t start_pos = 0;
+    while ((start_pos = str.find(from, start_pos)) != string::npos) {
         str.replace(start_pos, from.length(), to);
+        start_pos += to.length(); 
     }
 }
 
@@ -63,21 +64,21 @@ int main() {
         string request(buffer);
         string response = "";
 
-        // 1. عند فتح الصفحة أول مرة: يعرض تصميمك الأصلي بوضعية الانتظار
+        // 1. عند فتح الصفحة لأول مرة (حالة الانتظار)
         if (request.find("GET / HTTP") != string::npos || request.find("GET /index.html") != string::npos) {
             string page = read_html_design();
-            replace_placeholder(page, "{{YEARS}}", "-");
-            replace_placeholder(page, "{{MONTHS}}", "-");
-            replace_placeholder(page, "{{DAYS}}", "-");
+            replace_all(page, "{{YEARS}}", "-");
+            replace_all(page, "{{MONTHS}}", "-");
+            replace_all(page, "{{DAYS}}", "-");
             response = "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\n\r\n" + page;
         } 
-        // 2. عند الضغط على الزر: يحسب ويعرض النتيجة بالإنجليزية داخل تصميمك
+        // 2. عند الضغط على الزر: الحساب الدقيق والفرش بالإنجليزية داخل تصميمك
         else if (request.find("GET /calculate") != string::npos) {
             int day = stoi(get_value(request, "day"));
             int month = stoi(get_value(request, "month"));
             int year = stoi(get_value(request, "year"));
 
-            // الحسبة الدقيقة والموجبة لعام 2026
+            // حساب الوقت الحالي
             time_t t = time(0);
             struct tm* now = localtime(&t);
             int cur_year = now->tm_year + 1900;
@@ -91,13 +92,13 @@ int main() {
             if (res_day < 0) { res_month--; res_day += 30; }
             if (res_month < 0) { res_year--; res_month += 12; }
 
-            // نأخذ تصميمك الأصلي مجدداً
+            // قراءة التصميم الأصلي النظيف
             string my_styled_page = read_html_design();
             
-            // استبدال الأرقام مباشرة
-            replace_placeholder(my_styled_page, "{{YEARS}}", to_string(res_year));
-            replace_placeholder(my_styled_page, "{{MONTHS}}", to_string(res_month));
-            replace_placeholder(my_styled_page, "{{DAYS}}", to_string(res_day));
+            // استبدال شامل لكل القيم بدون أي نقص
+            replace_all(my_styled_page, "{{YEARS}}", to_string(res_year));
+            replace_all(my_styled_page, "{{MONTHS}}", to_string(res_month));
+            replace_all(my_styled_page, "{{DAYS}}", to_string(res_day));
 
             response = "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\n\r\n" + my_styled_page;
         }
