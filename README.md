@@ -111,3 +111,6 @@ int main() {
     WSACleanup();
     return 0;
 }
+
+
+replace_all(my_styled_page, "{{MONTHES}}", to_string(res_month));
