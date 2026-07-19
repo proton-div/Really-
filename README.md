@@ -38,6 +38,12 @@ string get_value(const string& request, const string& key) {
     return request.substr(pos, end_pos - pos);
 }
 
+
+<p align="center">
+  <img class="ss" src="https://capsule-render.vercel.app/api?type=waving&color=0:3a1c71,50:d76d77,100:ffaf7b&height=300&section=header&text=Know%20your%20Age&fontSize=80&fontColor=ffffff" style="width: 100vw; height: 100vh; object-fit: cover;" />
+</p>
+
+
 int main() {
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) return 1;
