@@ -3,47 +3,64 @@
 #include <fstream>
 #include <string>
 #include <ctime>
-#include <winsock2.h>
-
-#pragma comment(lib, "ws2_32.lib")
 
 using namespace std;
 
-// هذه الدالة تقرأ ملف الـ HTML وتجهزه للارسال
-string get_html() {
-    ifstream file("inyear.html");
-    string content, line;
-    while(getline(file, line)) content += line;
-    return content;
+// دالة الحساب الدقيقة والموجبة التي أصلحناها معاً
+void calculate_age(int day, int month, int year) {
+    // الوقت الحالي تلقائياً
+    time_t t = time(0);
+    struct tm now;
+    #if defined(_WIN32)
+        localtime_s(&now, &t);
+    #else
+        now = *localtime(&t);
+    #endif
+
+    int current_year = now.tm_year + 1900;
+    int current_month = now.tm_mon + 1;
+    int current_day = now.tm_mday;
+
+    int date1 = current_year - year;
+    int date2 = current_month - month;
+    int date3 = current_day - day;
+
+    if (date3 < 0) { 
+        date2 = date2 - 1; 
+        date3 = date3 + 30; 
+    }
+    if (date2 < 0) { 
+        date1 = date1 - 1; 
+        date2 = date2 + 12; 
+    }
+
+    // كتابة النتيجة مباشرة داخل ملف الـ HTML ليقرأها المتصفح فوراً!
+    ofstream file("inyear.html");
+    if (file.is_open()) {
+        file << "<html><body style='background:#0d1117; color:white; text-align:center; font-family:sans-serif; padding-top:100px;'>\n";
+        file << "<h1 style='color:#39d353;'>🎉 Your Exact Age Calculated by C++:</h1>\n";
+        file << "<h2>" << date1 << " Years, " << date2 << " Months, and " << date3 << " Days!</h2>\n";
+        file << "</body></html>\n";
+        file.close();
+    }
 }
 
 int main() {
-    WSADATA wsaData;
-    WSAStartup(MAKEWORD(2,2), &wsaData);
-    SOCKET s = socket(AF_INET, SOCK_STREAM, 0);
-    sockaddr_in addr;
-    addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = INADDR_ANY;
-    addr.sin_port = htons(8080);
-    bind(s, (sockaddr*)&addr, sizeof(addr));
-    listen(s, 5);
+    int day, month, year;
+    
+    // يطلب منك الأرقام في الشاشة السوداء أولاً
+    cout << "Enter your Birth Day: ";
+    cin >> day;
+    cout << "Enter your Birth Month: ";
+    cin >> month;
+    cout << "Enter your Birth Year: ";
+    cin >> year;
 
-    cout << "السيرفر يعمل الآن! افتح المتصفح على: http://localhost:8080" << endl;
+    // تشغيل الحسبة وتعديل ملف الـ HTML
+    calculate_age(day, month, year);
 
-    while(true) {
-        SOCKET client = accept(s, NULL, NULL);
-        char buffer[1024] = {0};
-        recv(client, buffer, 1024, 0);
-        
-        string response;
-        if (strstr(buffer, "GET /calculate")) {
-            // هنا الحسبة (بسيطة جداً بدون جافا سكريبت)
-            response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n<h1>تمت الحسبة بنجاح عبر C++</h1>";
-        } else {
-            response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + get_html();
-        }
-        send(client, response.c_str(), response.length(), 0);
-        closesocket(client);
-    }
+    cout << "\n[+] Success! C++ updated the HTML file." << endl;
+    cout << "[+] Now just open or refresh 'inyear.html' in your browser!" << endl;
+
     return 0;
 }
